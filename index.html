@@ -1,0 +1,72 @@
+<video id="myvideo" controls muted loop>
+  <source
+    src="https://video.fktw1-1.fna.fbcdn.net/v/t42.1790-2/89418922_253397248993218_2646222916928143360_n.mp4?_nc_cat=105&_nc_sid=5aebc0&efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfdjRfcGFzc3Rocm91Z2hfZnJhZ18yX3ZpZGVvIn0%3D&_nc_ohc=eXwYBxXXLCMAX83Cmmk&_nc_ht=video.fktw1-1.fna&oh=c9da1772dad5e6892100912da5c5739a&oe=5E651C69"
+    type="video/mp4"
+  />
+  <audio id="myaudio">
+    <source
+      src="https://video.fktw1-1.fna.fbcdn.net/v/t42.1790-2/89470411_204331617325951_8995422858142285824_n.mp4?_nc_cat=111&_nc_sid=5aebc0&efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfYXVkaW9fYWFjcF82NF9mcmFnXzJfYXVkaW8ifQ%3D%3D&_nc_ohc=HkA2gTbcjbUAX8ASurv&_nc_ht=video.fktw1-1.fna&oh=4c3d13a117c0081bda715fff07b8a308&oe=5E6517A1"
+      type="audio/mpeg"
+    />
+  </audio>
+</video>
+
+<canvas id="myCanvas" width="532" height="300"></canvas>
+
+<script>
+  const myvideo = document.getElementById('myvideo');
+  const myaudio = document.getElementById('myaudio');
+
+  let change_time_state = true;
+
+  myvideo.onplay = function() {
+    myaudio.play();
+    if (change_time_state) {
+      myaudio.currentTime = myvideo.currentTime;
+      change_time_state = false;
+    }
+  };
+
+  myvideo.onpause = function() {
+    myaudio.pause();
+    change_time_state = true;
+  };
+
+  // myvideo.addEventListener('complete', a => console.log('AA', a));
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+
+  myvideo.play();
+  myvideo.addEventListener('play', () => {
+    const step = () => {
+      ctx.drawImage(myvideo, 0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+
+    // Init stream and recorder
+    const stream = canvas.captureStream();
+    const recorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm',
+    });
+
+    // Get the blob data when is available
+    let allChunks = [];
+    recorder.ondataavailable = e => {
+      console.log({ e }); // img1
+      allChunks.push(e.data);
+    };
+
+    // Start to record
+    recorder.start();
+
+    // Stop the recorder after 5s and check the result
+    setTimeout(() => {
+      recorder.stop();
+      const fullBlob = new Blob(allChunks, { type: 'video/webm' });
+      const downloadUrl = window.URL.createObjectURL(fullBlob);
+      console.log({ fullBlob }); // img2
+    }, 5000);
+  });
+</script>
+<canvas id="myCanvas" width="532" height="300"></canvas>

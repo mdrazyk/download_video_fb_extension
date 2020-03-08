@@ -1,0 +1,29 @@
+{
+	"name": "Video Downloader",
+	"description": "Chrome plugin for downloading videos from Facebook by right mouse click",
+	"version": "0.1.1",
+	"manifest_version": 2,
+	"icons": {
+		"128": "favicon-120x120.png"
+	},
+	"permissions": [
+		"webRequest",
+		"<all_urls>"
+	],
+	"background": {
+		"scripts": [
+			"index.js"
+		]
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"content-script.js"
+			],
+			"all_frames": true
+		}
+	]
+}
