@@ -35,62 +35,35 @@ const getFromBetween = {
   },
 };
 
-let videoRequests = [];
+const downloadVideo = async videoLink => {
+  const htmlData = await fetch(videoLink).then(data => data.text());
+  const [sdUrl] = getFromBetween.get(htmlData, 'sd_src:"', '",hd_tag:"');
+  const [hdUrl] = getFromBetween.get(htmlData, 'hd_src:"', '",sd_src:"');
 
-// const getHtmlContent = ({ html, start, end }) => {
-//   const spliStart = html.indexOf(start) + start.length;
-//   const splitEnd = html.indexOf(end);
-//   return html.slice(spliStart, splitEnd);
-// };
+  const url = hdUrl || sdUrl;
 
-// const getVideoDataFromHtml = html => {
-//   const hdUrl = getHtmlContent({
-//     html,
-//     start: 'hd_src:"',
-//     end: '",sd_src:"',
-//   });
-//   const sdUrl = getHtmlContent({
-//     html,
-//     start: 'sd_src:"',
-//     end: '",hd_tag:"',
-//   });
-
-//   return {
-//     hdUrl: hdUrl && hdUrl.startsWith('https://') ? hdUrl : null,
-//     sdUrl: sdUrl && sdUrl.startsWith('https://') ? sdUrl : null,
-//   };
-// };
-
-const downloadVideo = async () => {
-  const htmlData = await fetch(window.location.href).then(data => data.text());
-
-  const allUrls = getFromBetween.get(htmlData, 'sd_src:"', '",hd_tag:"');
-  console.log('allUrls', allUrls);
-
-  // const videoData = getVideoDataFromHtml(htmlData);
-
-  // const { sdUrl, hdUrl } = videoData;
-  // const videoUrl = hdUrl ? hdUrl : sdUrl;
-
-  // console.log('htmlData', htmlData);
-
-  // chrome.runtime.sendMessage({ videoUrl, type: 'SEND_VIDEO_URL' });
+  chrome.runtime.sendMessage({
+    type: 'VIDEO_URLS',
+    url,
+  });
 };
 
 const createDownloadVideoElement = ul => {
   const elementId = 'custom_context_menu_item';
   const customContextMenuItem = ul.querySelector(`#${elementId}`);
-
   if (customContextMenuItem) {
     ul.removeChild(customContextMenuItem);
   }
+  const liElement = ul.lastElementChild;
+  const spanElement = liElement.querySelector('[value]');
+  const videoLink = spanElement.getAttribute('value');
 
   const lastChild = ul.lastChild;
   const li = lastChild.cloneNode(true);
 
   li.id = elementId;
   li.lastChild.innerHTML = 'Download Video';
-  li.onclick = downloadVideo;
+  li.onclick = () => downloadVideo(videoLink);
   li.onmouseover = e => (e.target.style.backgroundColor = '#ff0000');
   li.onmouseout = e => (e.target.style.backgroundColor = '#ECF3FF');
   ul.appendChild(li);
@@ -104,25 +77,20 @@ const createContextMenuElement = () => {
   if (Array.from(contextMenu).length) {
     Array.from(contextMenu).forEach(child => {
       const ulList = child.getElementsByTagName('ul');
-      Array.from(ulList).forEach(ul => createDownloadVideoElement(ul));
+      const ulListElements = Array.from(ulList);
+
+      ulListElements.forEach(ul => createDownloadVideoElement(ul));
     });
   }
 };
 
 window.addEventListener('mousedown', event => {
   setTimeout(() => {
-    const element = event.srcElement;
-    if (element.nodeName === 'VIDEO') {
-      element.onended = () => setTimeout(() => createContextMenuElement(), 30);
+    const video = event.srcElement;
+    if (video.nodeName === 'VIDEO') {
+      video.onended = () =>
+        setTimeout(() => createContextMenuElement(video), 30);
       createContextMenuElement();
     }
   });
-});
-
-chrome.runtime.onMessage.addListener(async ({ type, body }) => {
-  if (type === 'VIDEO_REQUEST') {
-    videoRequests.push(body);
-    const url = body.url.slice(0, body.url.indexOf('&bytestart'));
-    // console.log('url', url);
-  }
 });
