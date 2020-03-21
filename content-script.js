@@ -35,32 +35,50 @@ const getFromBetween = {
   },
 };
 
-const downloadVideo = async videoLink => {
-  const htmlData = await fetch(videoLink).then(data => data.text());
+const getVideoLink = htmlData => {
   const [sdUrl] = getFromBetween.get(htmlData, 'sd_src:"', '",hd_tag:"');
   const [hdUrl] = getFromBetween.get(htmlData, 'hd_src:"', '",sd_src:"');
+  const [content] = getFromBetween.get(
+    htmlData,
+    '<meta property="og:video:secure_url" content="',
+    '" />',
+  );
 
-  const url = hdUrl || sdUrl;
+  if (sdUrl || hdUrl) {
+    return sdUrl || hdUrl;
+  }
 
-  chrome.runtime.sendMessage({
-    type: 'VIDEO_URLS',
-    url,
-  });
+  const div = document.createElement('div');
+  div.innerHTML = content;
+  const decodedUrl = div.firstChild.nodeValue;
+  return decodedUrl;
+};
+
+const downloadVideo = async videoLink => {
+  const htmlData = await fetch(videoLink).then(data => data.text());
+  const url = getVideoLink(htmlData);
+  console.log('url', url);
+
+  // chrome.runtime.sendMessage({
+  //   type: 'VIDEO_URLS',
+  //   url,
+  // });
 };
 
 const createDownloadVideoElement = ul => {
   const elementId = 'custom_context_menu_item';
   const customContextMenuItem = ul.querySelector(`#${elementId}`);
   if (customContextMenuItem) {
-    ul.removeChild(customContextMenuItem);
+    return;
   }
+
   const liElement = ul.lastElementChild;
   const spanElement = liElement.querySelector('[value]');
-  const videoLink = spanElement.getAttribute('value');
-
+  const videoLink = spanElement && spanElement.getAttribute('value');
+  console.log('videoLink', videoLink);
   const lastChild = ul.lastChild;
-  const li = lastChild.cloneNode(true);
 
+  const li = lastChild.cloneNode(true);
   li.id = elementId;
   li.lastChild.innerHTML = 'Download Video';
   li.onclick = () => downloadVideo(videoLink);
@@ -70,26 +88,31 @@ const createDownloadVideoElement = ul => {
 };
 
 const createContextMenuElement = () => {
-  const contextMenu = document.getElementsByClassName(
+  const allContextMenuElements = document.getElementsByClassName(
+    'uiContextualLayerPositioner',
+  );
+
+  const [_, contextMenu] = Array.from(allContextMenuElements).filter(
+    child => child.className === 'uiContextualLayerPositioner uiLayer',
+  );
+
+  const [falbackContextMenu] = document.getElementsByClassName(
     'uiContextualLayer uiContextualLayerBelowLeft',
   );
 
-  if (Array.from(contextMenu).length) {
-    Array.from(contextMenu).forEach(child => {
-      const ulList = child.getElementsByTagName('ul');
-      const ulListElements = Array.from(ulList);
+  const ulList = contextMenu
+    ? contextMenu.getElementsByTagName('ul')
+    : falbackContextMenu.getElementsByTagName('ul');
+  const ulListElements = Array.from(ulList);
 
-      ulListElements.forEach(ul => createDownloadVideoElement(ul));
-    });
-  }
+  ulListElements.forEach(ul => createDownloadVideoElement(ul));
 };
 
 window.addEventListener('mousedown', event => {
   setTimeout(() => {
     const video = event.srcElement;
     if (video.nodeName === 'VIDEO') {
-      video.onended = () =>
-        setTimeout(() => createContextMenuElement(video), 30);
+      video.onended = () => setTimeout(() => createContextMenuElement(), 30);
       createContextMenuElement();
     }
   });
