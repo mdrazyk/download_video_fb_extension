@@ -1,5 +1,5 @@
 {
-	"name": "Video Downloader",
+	"name": "Download facebook video plugin",
 	"description": "Chrome plugin for downloading videos from Facebook by right mouse click",
 	"version": "0.1.1",
 	"manifest_version": 2,
@@ -7,7 +7,6 @@
 		"128": "favicon-120x120.png"
 	},
 	"permissions": [
-		"webRequest",
 		"<all_urls>"
 	],
 	"background": {
