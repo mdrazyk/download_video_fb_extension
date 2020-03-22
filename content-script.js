@@ -122,8 +122,7 @@ const createDownloadButtonElement = contextMenuContainers => {
       }
       resolve();
     } catch (error) {
-      console.log('error', error);
-      reject('Cannot create download element');
+      reject(error);
     }
   });
 };
@@ -131,13 +130,21 @@ const createDownloadButtonElement = contextMenuContainers => {
 const addContextMenuToVideo = async videos => {
   for (const video of videos) {
     video.oncontextmenu = async () => {
-      const contextMenuContainers = await getContextMenuContainers();
-      await createDownloadButtonElement(contextMenuContainers);
+      try {
+        const contextMenuContainers = await getContextMenuContainers();
+        await createDownloadButtonElement(contextMenuContainers);
+      } catch (error) {
+        console.error('Something went wrong.', error);
+      }
     };
 
     video.onplay = async () => {
-      const contextMenuContainers = await getContextMenuContainers();
-      await createDownloadButtonElement(contextMenuContainers);
+      try {
+        const contextMenuContainers = await getContextMenuContainers();
+        await createDownloadButtonElement(contextMenuContainers);
+      } catch (error) {
+        console.error('Something went wrong.', error);
+      }
     };
   }
 };

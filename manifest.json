@@ -1,7 +1,7 @@
 {
-	"name": "Download facebook video plugin",
-	"description": "Chrome plugin for downloading videos from Facebook by right mouse click",
-	"version": "0.1.1",
+	"name": "Download video from facebook",
+	"description": "Chrome plugin that extends the facebook context menu and adds functionality for downloading the selected video element",
+	"version": "0.1.0",
 	"manifest_version": 2,
 	"icons": {
 		"128": "download-line120.png"
