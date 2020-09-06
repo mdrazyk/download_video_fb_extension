@@ -1,19 +1,20 @@
 const CONTEXT_MENU_ID = 'custom-context-menu';
 
 let contextMenuOpen = false;
+let linkToDownload = '';
+
+const handleClick = async () => {
+  const href = linkToDownload || window.location.href;
+  const url = href.replace('www.', 'd.');
+
+  chrome.runtime.sendMessage({
+    type: 'DOWNLOAD_VIDEO',
+    url,
+  });
+};
 
 const createDownloadButton = () => {
   const button = document.createElement('button');
-
-  const handleClick = async () => {
-    const { href } = window.location;
-    const url = href.replace('www.', 'd.');
-
-    chrome.runtime.sendMessage({
-      type: 'DOWNLOAD_VIDEO',
-      url,
-    });
-  };
 
   // button props
   button.innerText = 'Download';
@@ -45,7 +46,7 @@ const createContextMenuElement = () => {
   contextMenu.style.backgroundColor = 'white';
   contextMenu.style.top = '0px';
   contextMenu.style.left = '0px';
-  contextMenu.style.position = 'absolute';
+  contextMenu.style.position = 'fixed';
   contextMenu.style.display = 'none';
 
   contextMenu.appendChild(createDownloadButton());
@@ -54,6 +55,8 @@ const createContextMenuElement = () => {
 };
 
 const openHideContextMenu = ({ xMousePosition, yMousePosition }) => {
+  console.log('yMousePosition :', yMousePosition);
+  console.log('xMousePosition :', xMousePosition);
   const contextMenu = document.getElementById(CONTEXT_MENU_ID);
 
   contextMenuOpen = !contextMenuOpen;
@@ -69,5 +72,20 @@ window.onload = () => {
 
 window.oncontextmenu = (event) => {
   const { x: xMousePosition, y: yMousePosition } = event;
+  const videoLink = event.target.parentElement.querySelector(
+    "[aria-label^='Enlarge']",
+  );
+
+  // event.target.textContent means that if
+  // the clicked element contains any text
+  // then it means it's not a video element
+  // so the context menu should be invisible
+  if (!window.location.pathname.includes('/videos/')) {
+    if (!videoLink || event.target.textContent) {
+      return;
+    }
+  }
+
+  linkToDownload = videoLink ? videoLink.href : '';
   openHideContextMenu({ xMousePosition, yMousePosition });
 };
