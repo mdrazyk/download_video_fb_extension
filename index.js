@@ -53,12 +53,8 @@ chrome.runtime.onMessage.addListener(({ type, url }) => {
           '&amp;',
         );
 
-        const url = decodeURIComponent(videoUrl);
-
-        // TODO wywalic setTimeout
-        setTimeout(() => {
-          chrome.downloads.download({ url });
-        }, 1000);
-      });
+        return decodeURIComponent(videoUrl);
+      })
+      .then((url) => chrome.downloads.download({ url }));
   }
 });
