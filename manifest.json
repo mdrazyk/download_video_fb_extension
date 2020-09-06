@@ -7,7 +7,8 @@
 		"128": "download-line120.png"
 	},
 	"permissions": [
-		"<all_urls>"
+		"<all_urls>",
+		"downloads"
 	],
 	"background": {
 		"scripts": [
