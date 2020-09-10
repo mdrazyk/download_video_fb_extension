@@ -53,6 +53,19 @@ const createDownloadButton = () => {
   return button;
 };
 
+const createLicenseAnnotation = () => {
+  const span = document.createElement('span');
+
+  span.innerHTML = `Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>`;
+  span.style.fontSize = '7px';
+  span.style.position = 'absolute';
+  span.style.top = '90%';
+  span.style.width = '100%';
+  span.style.textAlign = 'center';
+
+  return span;
+};
+
 const createContextMenuElement = () => {
   contextMenu = document.createElement('div');
 
@@ -69,6 +82,7 @@ const createContextMenuElement = () => {
   contextMenu.style.display = 'none';
 
   contextMenu.appendChild(createDownloadButton());
+  contextMenu.appendChild(createLicenseAnnotation());
 };
 
 const openHideContextMenu = (event) => {
