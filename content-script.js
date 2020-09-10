@@ -2,6 +2,9 @@ const CONTEXT_MENU_ID = 'custom-context-menu';
 const CONTEXT_MENU_WIDTH = 300;
 const CONTEXT_MENU_HEIGHT = 150;
 
+const BUTTON_WIDTH = 150;
+const BUTTON_HEIGHT = 40;
+
 let contextMenu = null;
 let contextMenuOpen = false;
 let linkToDownload = '';
@@ -30,22 +33,22 @@ const createDownloadButton = () => {
   button.style.fontFamily = 'Arial';
   button.style.fontSize = '16px';
   button.style.position = 'relative';
-  button.style.top = '53px';
-  button.style.left = '75px';
-  button.style.width = '150px';
-  button.style.height = '40px';
+  button.style.top = `${CONTEXT_MENU_HEIGHT / 2 - BUTTON_HEIGHT / 2}px`;
+  button.style.left = `${CONTEXT_MENU_WIDTH / 2 - BUTTON_WIDTH / 2}px`;
+  button.style.width = `${BUTTON_WIDTH}px`;
+  button.style.height = `${BUTTON_HEIGHT}px`;
 
   // button handlers
-  button.onclick = handleClick;
-
-  button.onmouseover = () => {
+  button.addEventListener('mouseover', () => {
     button.style.cursor = 'pointer';
     button.style.backgroundColor = '#326296';
-  };
+  });
 
-  button.onmouseleave = () => {
+  button.addEventListener('mouseleave', () => {
     button.style.backgroundColor = '#4584c7';
-  };
+  });
+
+  button.addEventListener('click', handleClick);
 
   return button;
 };
@@ -86,14 +89,12 @@ const openHideContextMenu = (event) => {
   return event.target.parentElement.parentElement.remove(contextMenu);
 };
 
-window.onload = () => {
+window.addEventListener('load', () => {
   createContextMenuElement();
-};
+});
 
-window.oncontextmenu = (event) => {
-  const videoLink = event.target.parentElement.querySelector(
-    "[aria-label^='Enlarge']",
-  );
+window.addEventListener('contextmenu', (event) => {
+  const videoLink = event.target.parentElement.querySelector("[role='link']");
 
   // event.target.textContent means that if
   // the clicked element contains any text
@@ -107,19 +108,13 @@ window.oncontextmenu = (event) => {
 
   linkToDownload = videoLink ? videoLink.href : '';
   openHideContextMenu(event);
-};
+});
 
-window.onclick = (event) => {
+window.addEventListener('click', (event) => {
   if (!contextMenuOpen || event.target.id === CONTEXT_MENU_ID) {
-    return;
-  }
-
-  const contextMenu = document.getElementById(CONTEXT_MENU_ID);
-
-  if (!contextMenu) {
     return;
   }
 
   contextMenu.style.display = 'none';
   contextMenuOpen = false;
-};
+});
