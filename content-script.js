@@ -11,7 +11,7 @@ let linkToDownload = '';
 
 const handleClick = async () => {
   const href = linkToDownload || window.location.href;
-  const url = href.replace('www.', 'd.');
+  const url = href.replace('https://www.', 'https://d.');
 
   chrome.runtime.sendMessage({
     type: 'DOWNLOAD_VIDEO',

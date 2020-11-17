@@ -44,17 +44,20 @@ chrome.tabs.query(
 
 chrome.runtime.onMessage.addListener(({ type, url }) => {
   if (type === 'DOWNLOAD_VIDEO') {
-    fetch(url)
-      .then((data) => data.text())
-      .then((htmlText) => {
-        const [videoUrl] = getFromBetween.get(
-          htmlText,
-          'video_redirect/?src=',
-          '&amp;',
-        );
+    fetch(url).then((data) => {
+      const url = data.url.replace('https://m.', 'https://d.');
+      fetch(url)
+        .then((data) => data.text())
+        .then((htmlText) => {
+          const [videoUrl] = getFromBetween.get(
+            htmlText,
+            'video_redirect/?src=',
+            '&amp;',
+          );
 
-        return decodeURIComponent(videoUrl);
-      })
-      .then((url) => chrome.downloads.download({ url }));
+          return decodeURIComponent(videoUrl);
+        })
+        .then((url) => chrome.downloads.download({ url }));
+    });
   }
 });
