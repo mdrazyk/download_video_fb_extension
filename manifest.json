@@ -1,13 +1,14 @@
 {
-	"name": "Download video from facebook",
-	"description": "Chrome plugin that extends the facebook context menu and adds functionality for downloading the selected video element",
-	"version": "0.1.0",
+	"name": "Video Downloader",
+	"description": "Chrome plugin that adds video download functionality to the Facebook news feed, groups, and the Watch section",
+	"version": "0.1.2",
 	"manifest_version": 2,
 	"icons": {
-		"128": "download-line120.png"
+		"128": "download.png"
 	},
 	"permissions": [
-		"<all_urls>"
+		"<all_urls>",
+		"downloads"
 	],
 	"background": {
 		"scripts": [

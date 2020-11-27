@@ -1,160 +1,134 @@
-let videos;
-const ELEMENT_ID = 'custom_context_menu_item';
+const CONTEXT_MENU_ID = 'custom-context-menu';
+const CONTEXT_MENU_WIDTH = 300;
+const CONTEXT_MENU_HEIGHT = 150;
 
-const getFromBetween = {
-  results: [],
-  string: '',
-  getFromBetween: function(sub1, sub2) {
-    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0)
-      return false;
-    const SP = this.string.indexOf(sub1) + sub1.length;
-    const string1 = this.string.substr(0, SP);
-    const string2 = this.string.substr(SP);
-    const TP = string1.length + string2.indexOf(sub2);
-    return this.string.substring(SP, TP);
-  },
-  removeFromBetween: function(sub1, sub2) {
-    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0)
-      return false;
-    const removal = sub1 + this.getFromBetween(sub1, sub2) + sub2;
-    this.string = this.string.replace(removal, '');
-  },
-  getAllResults: function(sub1, sub2) {
-    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return;
+const BUTTON_WIDTH = 150;
+const BUTTON_HEIGHT = 40;
 
-    const result = this.getFromBetween(sub1, sub2);
-    this.results.push(result);
-    this.removeFromBetween(sub1, sub2);
+let contextMenu = null;
+let contextMenuOpen = false;
+let linkToDownload = '';
 
-    if (this.string.indexOf(sub1) > -1 && this.string.indexOf(sub2) > -1) {
-      this.getAllResults(sub1, sub2);
-    } else return;
-  },
-  get: function(string, sub1, sub2) {
-    this.results = [];
-    this.string = string;
-    this.getAllResults(sub1, sub2);
-    return this.results;
-  },
-};
-
-const getVideoLink = htmlData => {
-  const [sdUrl] = getFromBetween.get(htmlData, 'sd_src:"', '",hd_tag:"');
-  const [hdUrl] = getFromBetween.get(htmlData, 'hd_src:"', '",sd_src:"');
-  const [content] = getFromBetween.get(
-    htmlData,
-    '<meta property="og:video:secure_url" content="',
-    '" />',
-  );
-
-  if (sdUrl || hdUrl) {
-    return sdUrl || hdUrl;
-  }
-
-  const div = document.createElement('div');
-  div.innerHTML = content;
-  const decodedUrl = div.firstChild.nodeValue;
-  return decodedUrl;
-};
-
-const downloadVideo = async videoLink => {
-  const htmlData = await fetch(videoLink).then(data => data.text());
-  const url = getVideoLink(htmlData);
+const handleClick = async () => {
+  const href = linkToDownload || window.location.href;
+  const url = href.replace('https://www.', 'https://d.');
 
   chrome.runtime.sendMessage({
-    type: 'VIDEO_URLS',
+    type: 'DOWNLOAD_VIDEO',
     url,
   });
 };
 
-const getContextMenuContainers = () =>
-  new Promise((resolve, reject) => {
-    try {
-      setTimeout(() => {
-        const contextMenuContainers = document.querySelectorAll(
-          'ul[role="menu"]',
-        );
-        resolve(contextMenuContainers);
-      }, 10);
-    } catch (error) {
-      reject('Cannot find context menu container');
-    }
+const createDownloadButton = () => {
+  const button = document.createElement('button');
+
+  // button props
+  button.innerText = 'Download Video';
+
+  // button style
+  button.style.backgroundColor = '#4584c7';
+  button.style.color = 'white';
+  button.style.borderRadius = '5px';
+  button.style.border = '1px solid';
+  button.style.fontFamily = 'Arial';
+  button.style.fontSize = '16px';
+  button.style.position = 'relative';
+  button.style.top = `${CONTEXT_MENU_HEIGHT / 2 - BUTTON_HEIGHT / 2}px`;
+  button.style.left = `${CONTEXT_MENU_WIDTH / 2 - BUTTON_WIDTH / 2}px`;
+  button.style.width = `${BUTTON_WIDTH}px`;
+  button.style.height = `${BUTTON_HEIGHT}px`;
+
+  // button handlers
+  button.addEventListener('mouseover', () => {
+    button.style.cursor = 'pointer';
+    button.style.backgroundColor = '#326296';
   });
 
-const createDownloadButtonElement = contextMenuContainers => {
-  return new Promise((resolve, reject) => {
-    try {
-      for (const contextMenuContainer of contextMenuContainers) {
-        const lastChild = contextMenuContainer.lastChild;
-        const spanElement = lastChild.querySelector('[value]');
-        const videoLink = spanElement && spanElement.getAttribute('value');
-
-        const elementId = 'custom_context_menu_item';
-        const customContextMenuItem = contextMenuContainer.querySelector(
-          `#${elementId}`,
-        );
-        if (customContextMenuItem) {
-          customContextMenuItem.remove();
-        }
-
-        const li = lastChild.cloneNode(true);
-
-        li.id = ELEMENT_ID;
-        li.lastChild.innerHTML = 'Download Video';
-        li.onclick = () => {
-          contextMenuContainer.parentNode.parentNode.parentNode.parentNode.classList.add(
-            'hidden_elem',
-          );
-
-          downloadVideo(videoLink);
-        };
-        li.onmouseover = e => {
-          e.target.style.backgroundColor = '#4262ae';
-          e.target.style.color = '#ffffff';
-          e.target.style.borderColor = '#2b487d';
-        };
-        li.onmouseout = e => {
-          e.target.style.backgroundColor = '#ffffff';
-          e.target.style.color = '#000000';
-          e.target.style.borderColor = '#ffffff';
-        };
-        contextMenuContainer.appendChild(li);
-      }
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
+  button.addEventListener('mouseleave', () => {
+    button.style.backgroundColor = '#4584c7';
   });
+
+  button.addEventListener('click', handleClick);
+
+  return button;
 };
 
-const addContextMenuToVideo = async videos => {
-  for (const video of videos) {
-    video.oncontextmenu = async () => {
-      try {
-        const contextMenuContainers = await getContextMenuContainers();
-        await createDownloadButtonElement(contextMenuContainers);
-      } catch (error) {
-        console.error('Something went wrong.', error);
-      }
-    };
+const createLicenseAnnotation = () => {
+  const span = document.createElement('span');
 
-    video.onplay = async () => {
-      try {
-        const contextMenuContainers = await getContextMenuContainers();
-        await createDownloadButtonElement(contextMenuContainers);
-      } catch (error) {
-        console.error('Something went wrong.', error);
-      }
-    };
+  span.innerHTML = `Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>`;
+  span.style.fontSize = '7px';
+  span.style.position = 'absolute';
+  span.style.top = '90%';
+  span.style.width = '100%';
+  span.style.textAlign = 'center';
+
+  return span;
+};
+
+const createContextMenuElement = () => {
+  contextMenu = document.createElement('div');
+
+  // context menu props
+  contextMenu.setAttribute('id', CONTEXT_MENU_ID);
+
+  // context menu style
+  contextMenu.style.width = `${CONTEXT_MENU_WIDTH}px`;
+  contextMenu.style.height = `${CONTEXT_MENU_HEIGHT}px`;
+  contextMenu.style.backgroundColor = 'white';
+  contextMenu.style.borderRadius = '5px';
+  contextMenu.style.boxShadow = '0px 0px 50px 5px rgba(0,0,0,0.99)';
+  contextMenu.style.position = 'absolute';
+  contextMenu.style.display = 'none';
+
+  contextMenu.appendChild(createDownloadButton());
+  contextMenu.appendChild(createLicenseAnnotation());
+};
+
+const openHideContextMenu = (event) => {
+  const {
+    target: { offsetHeight, offsetWidth },
+  } = event;
+
+  contextMenuOpen = !contextMenuOpen;
+
+  if (contextMenuOpen) {
+    contextMenu.style.display = 'flex';
+    contextMenu.style.top = `${offsetHeight / 2 - CONTEXT_MENU_HEIGHT / 2}px`;
+    contextMenu.style.left = `${offsetWidth / 2 - CONTEXT_MENU_WIDTH / 2}px`;
+    return event.target.parentElement.parentElement.appendChild(contextMenu);
   }
+
+  contextMenu.style.display = 'none';
+  return event.target.parentElement.parentElement.remove(contextMenu);
 };
 
-(async () => {
-  videos = document.getElementsByTagName('video');
-  await addContextMenuToVideo(videos);
-})();
+window.addEventListener('load', () => {
+  createContextMenuElement();
+});
 
-window.addEventListener('scroll', async () => {
-  videos = document.getElementsByTagName('video');
-  await addContextMenuToVideo(videos);
+window.addEventListener('contextmenu', (event) => {
+  const videoLink = event.target.parentElement.querySelector("[role='link']");
+
+  // event.target.textContent means that if
+  // the clicked element contains any text
+  // then it means it's not a video element
+  // so the context menu should be invisible
+  if (!window.location.pathname.includes('/videos/')) {
+    if (!videoLink || event.target.textContent) {
+      return;
+    }
+  }
+
+  linkToDownload = videoLink ? videoLink.href : '';
+  openHideContextMenu(event);
+});
+
+window.addEventListener('click', (event) => {
+  if (!contextMenuOpen || event.target.id === CONTEXT_MENU_ID) {
+    return;
+  }
+
+  contextMenu.style.display = 'none';
+  contextMenuOpen = false;
 });

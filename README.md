@@ -1,17 +1,15 @@
-# Download video from facebook
+# Video Downloader
 
-This plugin extends the facebook context menu and adds functionality for downloading the selected video element.
+Chrome plugin that adds video download functionality
 
-You just simply
+## How does it work?
 
-1. Click the right mouse button
-2. Select the "Download Video" option
-3. Wait for a second and voila, the video is downloading
+1. Right-click on the Facebook video element
+2. Click the "Download Video" button
+3. Wait for a while for the video to start downloading
 
-## IMPORTANT!
+#### IMPORTANT! After installing the extension, you should restart your browser or at least the browser tab.
 
-After installing the extension, you should restart your browser or at least browser tab.
-
-If you find any bug, let me know by creating an issue in my GitHub repo
-https://github.com/mdrazyk/download_video_fb_extension/issues
+If you find any bugs, let me know by creating an issue in my GitHub repo
+https://github.com/mdrazyk/download_video_fb_extension/tree/facebook_video_downloader_v2
 I will be happy to help you :)
