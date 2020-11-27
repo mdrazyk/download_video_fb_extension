@@ -8,7 +8,7 @@ Chrome plugin that adds video download functionality
 2. Click the "Download Video" button
 3. Wait for a while for the video to start downloading
 
-## IMPORTANT! After installing the extension, you should restart your browser or at least the browser tab.
+#### IMPORTANT! After installing the extension, you should restart your browser or at least the browser tab.
 
 If you find any bugs, let me know by creating an issue in my GitHub repo
 https://github.com/mdrazyk/download_video_fb_extension/tree/facebook_video_downloader_v2
